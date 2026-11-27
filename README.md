@@ -30,14 +30,14 @@ Kenapa dipisah: satu nomor WA hanya boleh satu koneksi Baileys aktif.
 ## Deploy ke bot-hosting.net
 
 1. Buat project baru, runtime **Node.js 24**, entry file `index.js`.
-2. Upload isi folder lewat **file manager / SFTP**, bukan GitHub publik (karena `auth/` = sesi WA).
+2. Deploy dari repo GitHub **private** atau upload lewat file manager / SFTP. `auth/` sengaja tidak ikut.
    - `node_modules/` tidak perlu di-upload; hosting akan `npm install`.
 3. Environment variables di panel:
    - `HOST=0.0.0.0`
    - `PORT=3000`
    - `WA_TOKEN=` → isi dengan isi file `.token` (baca di aplikasi, jangan tempel ke chat)
    - opsional `DRY_RUN=1` → auto-reply cuma di log, tidak kirim
-4. Cek log sampai muncul `✅ WA TERHUBUNG`. Auto-restart sudah dari hosting.
+4. Di log akan muncul QR pairing saat pertama kali jalan. Scan lewat WA → **Perangkat tertaut → Tautkan perangkat**. Setelah itu tunggu `✅ WA TERHUBUNG`. Auto-restart sudah dari hosting.
 5. Paket **Free**: 256 MB RAM, 512 MB storage, 1 deployment, **renew manual tiap 4 hari**.
 
 Catatan: kombinasi ini kira-kira 60–120 MB RAM (Baileys tanpa browser), muat di paket Free.

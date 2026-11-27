@@ -6,6 +6,7 @@ import makeWASocket, {
   Browsers,
 } from '@whiskeysockets/baileys'
 import pino from 'pino'
+import qrcode from 'qrcode-terminal'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -113,6 +114,10 @@ async function connect() {
     })
     sock.ev.on('creds.update', saveCreds)
     sock.ev.on('connection.update', (u) => {
+      if (u.qr) {
+        console.log('\n📱 Helper belum tertaut — scan QR ini di WA (Perangkat tertaut):')
+        qrcode.generate(u.qr, { small: true })
+      }
       if (u.connection === 'open') {
         ready = true
         reconnecting = false

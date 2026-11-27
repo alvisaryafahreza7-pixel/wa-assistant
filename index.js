@@ -11,6 +11,7 @@ import makeWASocket, {
   Browsers,
 } from '@whiskeysockets/baileys'
 import pino from 'pino'
+import qrcode from 'qrcode-terminal'
 import { AI_SKILLS } from './skills.js'
 import { CONFIG } from './config.js'
 import { handleNoteCommand, dailyReminder } from './features/notes.js'
@@ -568,7 +569,10 @@ async function startBot() {
 
     let reconnecting = false
     sock.ev.on('connection.update', (u) => {
-      if (u.qr) console.log('\n📱 Sesi belum tertaut — lakukan pairing ulang.\n')
+      if (u.qr) {
+        console.log('\n📱 Sesi belum tertaut — scan QR ini di WA (Perangkat tertaut):')
+        qrcode.generate(u.qr, { small: true })
+      }
       if (u.connection === 'open') {
         reconnecting = false
         readyAt = Date.now() + 8000
