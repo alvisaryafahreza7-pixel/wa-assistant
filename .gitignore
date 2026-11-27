@@ -1,0 +1,16 @@
+node_modules/
+auth/
+auth_info_baileys/
+.token
+.wa-version.json
+.last-sent.json
+.warm-queue.json
+.warm-ready.json
+.warm-result.json
+*.log
+.env
+.env.*
+!.env.example
+contacts.json
+kontak-lengkap.json
+db.json

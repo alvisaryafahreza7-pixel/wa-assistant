@@ -1,0 +1,18 @@
+{
+  "name": "wa-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Satu proses: proxy kirim satu pesan + auto-reply AI di grup whitelist.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "pino": "^9.0.0"
+  }
+}
