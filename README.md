@@ -36,8 +36,13 @@ Kenapa dipisah: satu nomor WA hanya boleh satu koneksi Baileys aktif.
    - `HOST=0.0.0.0`
    - `PORT=3000`
    - `WA_TOKEN=` → isi dengan isi file `.token` (baca di aplikasi, jangan tempel ke chat)
+   - opsional `PAIR_PHONE=628xxx` → pakai **kode pairing**, bukan QR (nomor E.164 tanpa `+`)
    - opsional `DRY_RUN=1` → auto-reply cuma di log, tidak kirim
-4. Di log akan muncul QR pairing saat pertama kali jalan. Scan lewat WA → **Perangkat tertaut → Tautkan perangkat**. Setelah itu tunggu `✅ WA TERHUBUNG`. Auto-restart sudah dari hosting.
+4. Pairing:
+   - Tanpa `PAIR_PHONE`: QR tampil di log → scan di WA → **Perangkat tertaut → Tautkan perangkat**.
+   - Dengan `PAIR_PHONE`: kode 8 digit tampil di log → WA → **Perangkat tertaut → Tautkan dengan nomor telepon** → masukkan kode.
+   - Kode expire ~3 menit; otomatis minta kode baru kalau belum selesai.
+   - Setelah itu tunggu `✅ WA TERHUBUNG`. Auto-restart sudah dari hosting.
 5. Paket **Free**: 256 MB RAM, 512 MB storage, 1 deployment, **renew manual tiap 4 hari**.
 
 Catatan: kombinasi ini kira-kira 60–120 MB RAM (Baileys tanpa browser), muat di paket Free.

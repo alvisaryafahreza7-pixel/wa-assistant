@@ -21,6 +21,7 @@ const RESULT_FILE = path.join(dir, '.warm-result.json')
 const READY_FILE = path.join(dir, '.warm-ready.json')
 const IDLE_MS = Number(process.env.WARM_IDLE_MS || 15 * 60 * 1000)
 const GAP_MS = 90 * 1000
+const PAIR_PHONE = String(process.env.PAIR_PHONE || '').replace(/\D/g, '')
 
 const logger = pino({ level: 'silent' })
 let sock = null
@@ -113,10 +114,24 @@ async function connect() {
       logger,
     })
     sock.ev.on('creds.update', saveCreds)
-    sock.ev.on('connection.update', (u) => {
+    let pairingRequested = false
+    sock.ev.on('connection.update', async (u) => {
       if (u.qr) {
-        console.log('\n📱 Helper belum tertaut — scan QR ini di WA (Perangkat tertaut):')
-        qrcode.generate(u.qr, { small: true })
+        if (PAIR_PHONE && !sock?.authState?.creds?.registered && !pairingRequested) {
+          pairingRequested = true
+          try {
+            const code = await sock.requestPairingCode(PAIR_PHONE)
+            console.log('\n🔑 KODE PAIRING:', String(code).replace(/(.{4})/g, '$1-').replace(/-$/, ''))
+            console.log('Masukkan di WA → Perangkat tertaut → Tautkan dengan nomor telepon.\n')
+            setTimeout(() => { pairingRequested = false }, 150000).unref?.()
+          } catch (err) {
+            pairingRequested = false
+            console.error('❌ Gagal minta pairing code:', err.message)
+          }
+        } else if (!PAIR_PHONE) {
+          console.log('\n📱 Helper belum tertaut — scan QR ini di WA (Perangkat tertaut):')
+          qrcode.generate(u.qr, { small: true })
+        }
       }
       if (u.connection === 'open') {
         ready = true

@@ -568,10 +568,24 @@ async function startBot() {
     })
 
     let reconnecting = false
-    sock.ev.on('connection.update', (u) => {
+    let pairingRequested = false
+    sock.ev.on('connection.update', async (u) => {
       if (u.qr) {
-        console.log('\n📱 Sesi belum tertaut — scan QR ini di WA (Perangkat tertaut):')
-        qrcode.generate(u.qr, { small: true })
+        if (CONFIG.pairPhone && !sock?.authState?.creds?.registered && !pairingRequested) {
+          pairingRequested = true
+          try {
+            const code = await sock.requestPairingCode(CONFIG.pairPhone)
+            console.log('\n🔑 KODE PAIRING:', String(code).replace(/(.{4})/g, '$1-').replace(/-$/, ''))
+            console.log('Masukkan di WA → Perangkat tertaut → Tautkan dengan nomor telepon.\n')
+            setTimeout(() => { pairingRequested = false }, 150000).unref?.()
+          } catch (err) {
+            pairingRequested = false
+            console.error('❌ Gagal minta pairing code:', err.message)
+          }
+        } else if (!CONFIG.pairPhone) {
+          console.log('\n📱 Sesi belum tertaut — scan QR ini di WA (Perangkat tertaut):')
+          qrcode.generate(u.qr, { small: true })
+        }
       }
       if (u.connection === 'open') {
         reconnecting = false

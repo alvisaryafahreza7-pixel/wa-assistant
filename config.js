@@ -31,4 +31,7 @@ export const CONFIG = {
   host: process.env.HOST || '127.0.0.1',
   port: Number(process.env.PORT || 3000),
   token: process.env.WA_TOKEN || '',
+
+  // Pairing code (opsional): nomor WA E.164 tanpa '+' — kalau diisi, pakai kode, bukan QR.
+  pairPhone: String(process.env.PAIR_PHONE || '').replace(/\D/g, ''),
 }
