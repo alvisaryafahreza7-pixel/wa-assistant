@@ -740,14 +740,20 @@ const server = http.createServer(async (req, res) => {
       return json(res, 403, { error: 'Belum dikonfirmasi. Perlu confirmed: true' })
     }
     const sisa = gapRemainingMs()
+    if (sendInFlight) {
+      return json(res, 429, { error: 'Anti-spam: ada pengiriman masih berjalan' })
+    }
     if (sisa > 0) {
       return json(res, 429, { error: `Anti-spam: tunggu ${Math.ceil(sisa / 1000)} detik` })
     }
+    sendInFlight = true
     try {
       await sendOne(jid, text)
       return json(res, 200, { sent: true, to: jid })
     } catch (err) {
       return json(res, 500, { error: err.message })
+    } finally {
+      sendInFlight = false
     }
   }
 
