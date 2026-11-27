@@ -1,10 +1,14 @@
 export const CONFIG = {
   // === AUTO-REPLY: hanya grup yang masuk daftar ini ===
-  // Isi dengan JID lengkap (@g.us) atau hanya angka sebelum @g.us.
-  // Contoh: ['120363431298378142@g.us'] atau ['120363431298378142']
+  // Bisa diisi lewat env REPLY_GROUPS (dipisah koma) tanpa edit file.
+  // JID lengkap (@g.us) atau hanya angka sebelum @g.us.
+  // Contoh: REPLY_GROUPS=120363...@g.us  atau  REPLY_GROUPS=120363...,120364...
   // Kosong = auto-reply MATI (proxy kirim tetap jalan).
-  // ['*'] = semua grup (tidak disarankan).
-  replyGroups: [],
+  // * = semua grup (boleh untuk tes, tidak disarankan permanen).
+  replyGroups: String(process.env.REPLY_GROUPS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 
   personasPerReply: 3,
   typingDelay: 1400,

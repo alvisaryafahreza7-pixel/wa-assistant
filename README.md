@@ -37,6 +37,7 @@ Kenapa dipisah: satu nomor WA hanya boleh satu koneksi Baileys aktif.
    - `PORT=3000`
    - `WA_TOKEN=` → isi dengan isi file `.token` (baca di aplikasi, jangan tempel ke chat)
    - opsional `PAIR_PHONE=628xxx` → pakai **kode pairing**, bukan QR (nomor E.164 tanpa `+`)
+   - `REPLY_GROUPS=120363...@g.us` → grup yang boleh pakai command bot (boleh isi `*` saat tes)
    - opsional `DRY_RUN=1` → auto-reply cuma di log, tidak kirim
 4. Pairing:
    - Tanpa `PAIR_PHONE`: QR tampil di log → scan di WA → **Perangkat tertaut → Tautkan perangkat**.

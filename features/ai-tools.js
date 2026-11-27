@@ -10,28 +10,41 @@ const MAX_CONTENT = 500
 
 // Satu-satunya tempat yang menyentuh jaringan. Selalu mengembalikan string | null.
 async function callAI(messages, model) {
-  try {
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: model || 'openai',
-        messages,
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
-    if (!res.ok) return null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: model || 'openai',
+          messages,
+        }),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
 
-    const data = await res.json()
-    const raw = data?.choices?.[0]?.message?.content
-    if (typeof raw !== 'string') return null
+      // Pollinations gratis membatasi ~1 balasan / 45 detik per IP.
+      // Tunggu sesuai petunjuk server lalu coba sekali lagi.
+      if (res.status === 402 || res.status === 429) {
+        if (attempt === 1) return null
+        const body = await res.text().catch(() => '')
+        const detik = Number(body.match(/Retry after\s+(\d+)\s*s/i)?.[1]) || 5
+        await new Promise((r) => setTimeout(r, Math.min(detik, 46) * 1000))
+        continue
+      }
+      if (!res.ok) return null
 
-    const cleaned = raw.trim()
-    return cleaned || null
-  } catch {
-    // Timeout, jaringan mati, JSON rusak, dll. — jangan pernah lempar ke pemanggil.
-    return null
+      const data = await res.json()
+      const raw = data?.choices?.[0]?.message?.content
+      if (typeof raw !== 'string') return null
+
+      const cleaned = raw.trim()
+      return cleaned || null
+    } catch {
+      // Timeout, jaringan mati, JSON rusak, dll. — jangan pernah lempar ke pemanggil.
+      return null
+    }
   }
+  return null
 }
 
 // Bersihkan sisa markdown/table yang masih muncul walau sudah diminta tanpa markdown.
