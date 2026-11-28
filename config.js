@@ -33,7 +33,8 @@ export const CONFIG = {
   // === SERVER ===
   // Di bot-hosting.net: HOST=0.0.0.0, PORT=3000, WA_TOKEN=<isi dari file .token>
   host: process.env.HOST || '127.0.0.1',
-  port: Number(process.env.PORT || 3000),
+  // bot-hosting.net menentukan port lewat SERVER_PORT (bukan PORT).
+  port: Number(process.env.SERVER_PORT || process.env.PORT || 3000),
   // .trim() penting: panel hosting sering menyisipkan spasi/newline saat copy-paste.
   token: String(process.env.WA_TOKEN || '').trim(),
 

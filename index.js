@@ -57,6 +57,27 @@ let readyAt = 0
 let starting = false
 let sendInFlight = false
 let lastSentAt = 0
+
+// Inbox: pesan masuk terakhir supaya "otak" (OpenCode) bisa baca & bales.
+// Text-only, in-memory, maksimal 100 item — tidak nambah dependency/RAM.
+const inbox = []
+const INBOX_MAX = 100
+function recordInbox(msg) {
+  const text =
+    msg.message?.conversation ||
+    msg.message?.extendedTextMessage?.text ||
+    msg.message?.imageMessage?.caption ||
+    ''
+  inbox.push({
+    id: msg.key?.id || null,
+    jid: msg.key?.remoteJid || null,
+    sender: msg.key?.participant || msg.key?.remoteJid || null,
+    text: String(text).slice(0, 2000),
+    at: Date.now(),
+    fromMe: !!msg.key?.fromMe,
+  })
+  if (inbox.length > INBOX_MAX) inbox.shift()
+}
 try {
   lastSentAt = Number(JSON.parse(fs.readFileSync(LAST_SENT_FILE, 'utf8')).at) || 0
 } catch {}
@@ -637,9 +658,11 @@ async function startBot() {
     })
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
-      if (!CONFIG.replyGroups.length || Date.now() < readyAt) return
       const msg = messages?.[0]
-      if (!msg?.message || msg.key.fromMe) return
+      if (!msg?.message) return
+      recordInbox(msg)
+      if (msg.key.fromMe) return
+      if (!CONFIG.replyGroups.length || Date.now() < readyAt) return
       if (isDuplicate(msg)) return
       if (!isFresh(msg)) return
       const jid = msg.key.remoteJid
@@ -708,12 +731,20 @@ const server = http.createServer(async (req, res) => {
     })
   }
 
-  if (req.method !== 'POST') return json(res, 405, { error: 'POST saja' })
   const local = isLocal(req)
   const headerToken = String(req.headers['x-wa-token'] || '').trim()
-  if (!local && (!CONFIG.token || headerToken !== CONFIG.token)) {
-    return json(res, 401, { error: 'Token salah' })
+  const authorized = local || (!!CONFIG.token && headerToken === CONFIG.token)
+
+  if (url.pathname === '/inbox') {
+    if (!authorized) return json(res, 401, { error: 'Token salah' })
+    const since = Number(url.searchParams.get('since') || 0)
+    const limit = Math.min(Number(url.searchParams.get('limit') || 50), 100)
+    const items = inbox.filter((m) => m.at > since && !m.fromMe).slice(-limit)
+    return json(res, 200, { items, count: items.length, serverTime: Date.now() })
   }
+
+  if (!authorized) return json(res, 401, { error: 'Token salah' })
+  if (req.method !== 'POST') return json(res, 405, { error: 'POST saja' })
 
   const chunks = []
   let size = 0
