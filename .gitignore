@@ -12,5 +12,6 @@ auth_info_baileys/
 .env.*
 !.env.example
 contacts.json
+contacts.backup.json
 kontak-lengkap.json
 db.json
