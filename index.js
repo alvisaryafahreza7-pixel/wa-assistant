@@ -739,7 +739,10 @@ const server = http.createServer(async (req, res) => {
     if (!authorized) return json(res, 401, { error: 'Token salah' })
     const since = Number(url.searchParams.get('since') || 0)
     const limit = Math.min(Number(url.searchParams.get('limit') || 50), 100)
-    const items = inbox.filter((m) => m.at > since && !m.fromMe).slice(-limit)
+    const includeMe = url.searchParams.get('all') === '1'
+    const items = inbox
+      .filter((m) => m.at > since && (includeMe || !m.fromMe))
+      .slice(-limit)
     return json(res, 200, { items, count: items.length, serverTime: Date.now() })
   }
 
