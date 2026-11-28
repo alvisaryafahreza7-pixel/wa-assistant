@@ -30,7 +30,7 @@ export const CONFIG = {
 
   // === COMMAND BOT ===
   prefix: '.',
-  owner: '6288271501421@s.whatsapp.net', // nomor utama Bang
+  owner: '6288271501421@s.whatsapp.net', // nomor utama Arya
 
   // === SERVER ===
   // Di bot-hosting.net: HOST=0.0.0.0, PORT=3000, WA_TOKEN=<isi dari file .token>

@@ -109,8 +109,8 @@ POST /send     {"to":"Orang asik😜","text":"halo","allowGroup":true,"confirmed
 
 ## Alur kirim dari HP
 
-1. Aku panggil `/preview`, aku tunjukkan ke Bang.
-2. Bang bilang "ya, kirim".
+1. Aku panggil `/preview`, aku tunjukkan ke Arya.
+2. Arya bilang "ya, kirim".
 3. Baru aku panggil `/send` dengan `confirmed: true`.
 
 ## Sumber
