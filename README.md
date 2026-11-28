@@ -97,6 +97,7 @@ GET  /health
 GET  /inbox?since=0&limit=50&all=1     # pesan masuk; all=1 ikutkan pesan dari diri sendiri
 GET  /contacts                          # daftar nama → JID lokal (grup ditandai)
 GET  /wa-contacts?search=nama           # kontak WA asli dari Baileys (read-only)
+GET  /group-members?group=Orang%20Asik  # anggota grup + nama/telepon/LID (read-only)
 POST /preview  {"to":"Orang asik😜","text":"halo","allowGroup":true}
 POST /send     {"to":"Orang asik😜","text":"halo","allowGroup":true,"confirmed":true,"replyTo":"<id pesan>"}
 ```

@@ -799,6 +799,44 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { items, count: items.length })
   }
 
+  if (url.pathname === '/group-members') {
+    if (!authorized) return json(res, 401, { error: 'Token salah' })
+    const group = String(
+      url.searchParams.get('group') || url.searchParams.get('jid') || '',
+    )
+    let jid
+    try {
+      jid = resolveTarget(group, true)
+    } catch (err) {
+      return json(res, 400, { error: err.message })
+    }
+    if (!jid.endsWith('@g.us')) {
+      return json(res, 400, { error: 'Bukan grup WhatsApp' })
+    }
+    if (!sock?.user) {
+      return json(res, 500, { error: 'WA belum siap' })
+    }
+    try {
+      const meta = await sock.groupMetadata(jid)
+      const participants = Array.isArray(meta.participants) ? meta.participants : []
+      rememberContacts(participants)
+      const items = participants.map((p) => ({
+        id: p.id,
+        name: p.name || p.notify || p.username || null,
+        phone: p.phoneNumber || null,
+        lid: p.lid || null,
+        admin: p.admin || null,
+      }))
+      return json(res, 200, {
+        subject: meta.subject || null,
+        size: meta.size ?? items.length,
+        items,
+      })
+    } catch (err) {
+      return json(res, 500, { error: err.message })
+    }
+  }
+
   if (url.pathname === '/wa-contacts') {
     if (!authorized) return json(res, 401, { error: 'Token salah' })
     const q = String(url.searchParams.get('search') || '').toLowerCase()
