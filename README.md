@@ -95,7 +95,8 @@ Token dibaca dari env `WA_TOKEN` (di-`trim()` otomatis), fallback ke file `.toke
 ```bash
 GET  /health
 GET  /inbox?since=0&limit=50&all=1     # pesan masuk; all=1 ikutkan pesan dari diri sendiri
-GET  /contacts                          # daftar nama → JID (grup ditandai)
+GET  /contacts                          # daftar nama → JID lokal (grup ditandai)
+GET  /wa-contacts?search=nama           # kontak WA asli dari Baileys (read-only)
 POST /preview  {"to":"Orang asik😜","text":"halo","allowGroup":true}
 POST /send     {"to":"Orang asik😜","text":"halo","allowGroup":true,"confirmed":true,"replyTo":"<id pesan>"}
 ```

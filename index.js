@@ -62,6 +62,20 @@ let lastSentAt = 0
 // Text-only, in-memory, maksimal 100 item — tidak nambah dependency/RAM.
 const inbox = []
 const INBOX_MAX = 100
+
+// Daftar kontak WA asli dari event Baileys (read-only). Tidak menulis ke WA.
+const waContacts = new Map()
+function rememberContacts(list) {
+  for (const c of Array.isArray(list) ? list : []) {
+    if (!c?.id) continue
+    waContacts.set(c.id, { ...(waContacts.get(c.id) || {}), ...c })
+  }
+}
+function waName(jid) {
+  if (!jid) return null
+  const c = waContacts.get(jid)
+  return c ? c.name || c.notify || c.username || null : null
+}
 function recordInbox(msg) {
   const text =
     msg.message?.conversation ||
@@ -592,6 +606,8 @@ async function startBot() {
       logger,
     })
     sock.ev.on('creds.update', saveCreds)
+    sock.ev.on('contacts.upsert', rememberContacts)
+    sock.ev.on('contacts.update', rememberContacts)
     sock.ev.on('group-participants.update', async (event) => {
       if (event.action !== 'add' || !isAllowedGroup(event.id)) return
       if (!groupCfg(event.id).welcome) return
@@ -765,8 +781,8 @@ const server = http.createServer(async (req, res) => {
       .slice(-limit)
       .map((m) => ({
         ...m,
-        chatName: nameForJid(m.jid, contacts),
-        senderName: nameForJid(m.sender, contacts),
+        chatName: nameForJid(m.jid, contacts) || waName(m.jid),
+        senderName: nameForJid(m.sender, contacts) || waName(m.sender),
       }))
     return json(res, 200, { items, count: items.length, serverTime: Date.now() })
   }
@@ -781,6 +797,27 @@ const server = http.createServer(async (req, res) => {
         group: String(jid).endsWith('@g.us'),
       }))
     return json(res, 200, { items, count: items.length })
+  }
+
+  if (url.pathname === '/wa-contacts') {
+    if (!authorized) return json(res, 401, { error: 'Token salah' })
+    const q = String(url.searchParams.get('search') || '').toLowerCase()
+    const limit = Math.min(Number(url.searchParams.get('limit') || 50), 200)
+    let items = [...waContacts.values()].map((c) => ({
+      id: c.id,
+      name: c.name || c.notify || c.username || null,
+      phone: c.phoneNumber || null,
+      lid: c.lid || null,
+    }))
+    if (q) {
+      items = items.filter((c) =>
+        [c.name, c.id, c.phone, c.lid].some((v) =>
+          String(v || '').toLowerCase().includes(q),
+        ),
+      )
+    }
+    items = items.slice(0, limit)
+    return json(res, 200, { items, count: items.length, total: waContacts.size })
   }
 
   if (!authorized) return json(res, 401, { error: 'Token salah' })
