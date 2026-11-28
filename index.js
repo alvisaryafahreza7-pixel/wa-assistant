@@ -684,6 +684,17 @@ function json(res, status, obj) {
   res.end(JSON.stringify(obj))
 }
 
+// Request dari dalam container (Shell panel) dipercaya — tidak perlu token.
+// Ini bikin tes dari Shell selalu jalan walau env WA_TOKEN belum tersalin.
+function isLocal(req) {
+  const ip = String(req.socket?.remoteAddress || '')
+  return (
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip === '::ffff:127.0.0.1'
+  )
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', 'http://localhost')
 
@@ -693,11 +704,14 @@ const server = http.createServer(async (req, res) => {
       wa: sock?.user ? 'open' : 'connecting',
       autoReplyGroups: CONFIG.replyGroups.length,
       dryRun: CONFIG.dryRun,
+      token: CONFIG.token ? 'set' : 'kosong',
     })
   }
 
   if (req.method !== 'POST') return json(res, 405, { error: 'POST saja' })
-  if (!CONFIG.token || req.headers['x-wa-token'] !== CONFIG.token) {
+  const local = isLocal(req)
+  const headerToken = String(req.headers['x-wa-token'] || '').trim()
+  if (!local && (!CONFIG.token || headerToken !== CONFIG.token)) {
     return json(res, 401, { error: 'Token salah' })
   }
 
@@ -762,7 +776,10 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(CONFIG.port, CONFIG.host, () => {
   console.log(`API siap: http://${CONFIG.host}:${CONFIG.port}`)
-  if (!CONFIG.token) console.warn('⚠️  WA_TOKEN kosong — endpoint /send ditolak.')
+  console.log('Tes dari Shell hosting (127.0.0.1) tidak perlu token.')
+  if (!CONFIG.token) {
+    console.warn('⚠️  WA_TOKEN kosong / salah — endpoint hanya bisa diakses dari Shell hosting.')
+  }
 })
 
 function helperStillAlive() {

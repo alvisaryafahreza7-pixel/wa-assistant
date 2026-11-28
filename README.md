@@ -87,7 +87,10 @@ Default `[]` = auto-reply mati.
 ## API
 
 Base URL: `https://<project>.apps.bot-hosting.cloud` (atau `http://127.0.0.1:PORT` di HP).
-Semua POST butuh header `x-wa-token: <token>`.
+Semua POST dari **luar container** butuh header `x-wa-token: <token>`.
+Request dari **dalam container** (Shell panel, `127.0.0.1`) **tidak perlu token** — ini disengaja supaya tes dari Shell selalu jalan.
+
+Token dibaca dari env `WA_TOKEN` (di-`trim()` otomatis), fallback ke file `.token` kalau ada.
 
 ```bash
 GET  /health

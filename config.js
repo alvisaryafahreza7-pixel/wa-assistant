@@ -34,7 +34,8 @@ export const CONFIG = {
   // Di bot-hosting.net: HOST=0.0.0.0, PORT=3000, WA_TOKEN=<isi dari file .token>
   host: process.env.HOST || '127.0.0.1',
   port: Number(process.env.PORT || 3000),
-  token: process.env.WA_TOKEN || '',
+  // .trim() penting: panel hosting sering menyisipkan spasi/newline saat copy-paste.
+  token: String(process.env.WA_TOKEN || '').trim(),
 
   // Pairing code (opsional): nomor WA E.164 tanpa '+' — kalau diisi, pakai kode, bukan QR.
   pairPhone: String(process.env.PAIR_PHONE || '').replace(/\D/g, ''),
