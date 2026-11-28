@@ -91,6 +91,14 @@ function loadContacts() {
   }
 }
 
+function nameForJid(jid, contacts) {
+  if (!jid) return null
+  const found = Object.entries(contacts).find(
+    ([name, value]) => !name.startsWith('_') && value === jid,
+  )
+  return found ? found[0] : null
+}
+
 function resolveJid(to, contacts) {
   const target = String(to || '').trim()
   if (!target) return null
@@ -149,13 +157,24 @@ async function latestWaVersion() {
   return undefined
 }
 
-async function sendOne(jid, text) {
+async function sendOne(jid, text, replyTo) {
   if (!sock?.user) throw new Error('WA belum siap (masih connecting)')
   lastSentAt = Date.now()
   fs.writeFileSync(LAST_SENT_FILE, JSON.stringify({ at: lastSentAt, to: jid }))
   await sock.sendPresenceUpdate('composing', jid).catch(() => {})
-  await new Promise((r) => setTimeout(r, 900 + Math.floor(Math.random() * 1200)))
-  await sock.sendMessage(jid, { text })
+  await new Promise((r) => setTimeout(r, 600 + Math.floor(Math.random() * 700)))
+  const content = { text }
+  if (replyTo) {
+    content.quoted = {
+      key: { id: replyTo, remoteJid: jid, fromMe: false },
+    }
+  }
+  try {
+    await sock.sendMessage(jid, content)
+  } catch {
+    // Kalau quoted gagal (pesan terlalu lama), kirim biasa.
+    await sock.sendMessage(jid, { text })
+  }
   await sock.sendPresenceUpdate('paused', jid).catch(() => {})
 }
 
@@ -740,10 +759,28 @@ const server = http.createServer(async (req, res) => {
     const since = Number(url.searchParams.get('since') || 0)
     const limit = Math.min(Number(url.searchParams.get('limit') || 50), 100)
     const includeMe = url.searchParams.get('all') === '1'
+    const contacts = loadContacts()
     const items = inbox
       .filter((m) => m.at > since && (includeMe || !m.fromMe))
       .slice(-limit)
+      .map((m) => ({
+        ...m,
+        chatName: nameForJid(m.jid, contacts),
+        senderName: nameForJid(m.sender, contacts),
+      }))
     return json(res, 200, { items, count: items.length, serverTime: Date.now() })
+  }
+
+  if (url.pathname === '/contacts') {
+    if (!authorized) return json(res, 401, { error: 'Token salah' })
+    const items = Object.entries(loadContacts())
+      .filter(([name, jid]) => !name.startsWith('_') && jid)
+      .map(([name, jid]) => ({
+        name,
+        jid,
+        group: String(jid).endsWith('@g.us'),
+      }))
+    return json(res, 200, { items, count: items.length })
   }
 
   if (!authorized) return json(res, 401, { error: 'Token salah' })
@@ -796,7 +833,7 @@ const server = http.createServer(async (req, res) => {
     }
     sendInFlight = true
     try {
-      await sendOne(jid, text)
+      await sendOne(jid, text, a.replyTo)
       return json(res, 200, { sent: true, to: jid })
     } catch (err) {
       return json(res, 500, { error: err.message })

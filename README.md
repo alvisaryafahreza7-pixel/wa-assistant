@@ -94,13 +94,17 @@ Token dibaca dari env `WA_TOKEN` (di-`trim()` otomatis), fallback ke file `.toke
 
 ```bash
 GET  /health
+GET  /inbox?since=0&limit=50&all=1     # pesan masuk; all=1 ikutkan pesan dari diri sendiri
+GET  /contacts                          # daftar nama → JID (grup ditandai)
 POST /preview  {"to":"Orang asik😜","text":"halo","allowGroup":true}
-POST /send     {"to":"Orang asik😜","text":"halo","allowGroup":true,"confirmed":true}
+POST /send     {"to":"Orang asik😜","text":"halo","allowGroup":true,"confirmed":true,"replyTo":"<id pesan>"}
 ```
 
 - `/preview` tidak menyentuh WA sama sekali.
 - `/send` **menolak** kalau `confirmed` bukan `true`.
-- Jeda anti-spam 90 detik antar pengiriman proxy.
+- `replyTo` opsional → balasan dikutip dari pesan di inbox. Kalau gagal, kirim biasa.
+- `/inbox` dipakai "otak" (OpenCode) untuk baca chat lalu membalas lewat `/send`.
+- Jeda antar kirim default 5 detik; ubah lewat env `MIN_GAP_MS`.
 - Grup wajib `allowGroup: true`; broadcast/status selalu ditolak.
 
 ## Alur kirim dari HP

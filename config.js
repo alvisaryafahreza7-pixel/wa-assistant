@@ -24,7 +24,9 @@ export const CONFIG = {
   reactionCooldown: 45000,
 
   // === PROXY KIRIM ===
-  minGapMs: 90 * 1000, // jeda antar pengiriman lewat proxy
+  // Jeda antar kirim. Default 5 dtk supaya asisten bisa balas cepat.
+  // Bisa dinaikkan lewat env MIN_GAP_MS kalau mau lebih aman dari spam.
+  minGapMs: Number(process.env.MIN_GAP_MS || 5000),
 
   // === COMMAND BOT ===
   prefix: '.',
